@@ -32,7 +32,7 @@ func NewTaskHandler(api *grpccli.Client, log *logrus.Logger, appID int32) *Task 
 func (h *Task) EnrichRoutes(router *gin.Engine) {
 	taskRoutes := router.Group("/task")
 	taskRoutes.POST("/", h.createTaskAction)
-	taskRoutes.POST("/status", h.changeTaskStatusAction)
+	taskRoutes.POST("/:taskID/status", h.changeTaskStatusAction)
 	taskRoutes.GET("/", h.listTasksAction)
 	taskRoutes.GET("/:taskID", h.getTaskAction)
 }
@@ -83,14 +83,15 @@ func (h *Task) changeTaskStatusAction(c *gin.Context) {
 
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "app_id", fmt.Sprintf("%d", h.appID))
 
-	form, verr := tasksform.NewChangeTaskStatusForm().ParseAndValidate(c)
-	if verr != nil {
-		response.HandleError(verr, c)
+	taskID, err := strconv.ParseInt(c.Param("taskID"), 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to parse task_id", op)
+		response.HandleError(response.ResolveError(err), c)
 		return
 	}
 
 	task, err := h.api.TaskService.ChangeTaskStatus(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.ChangeTaskStatusRequest{
-		TaskId: form.(*tasksform.ChangeTaskStatusForm).TaskID,
+		TaskId: taskID,
 	})
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to change task status", op)
