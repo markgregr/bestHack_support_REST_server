@@ -33,8 +33,8 @@ func (h *Task) EnrichRoutes(router *gin.Engine) {
 	taskRoutes := router.Group("/task")
 	taskRoutes.POST("/", h.createTaskAction)
 	taskRoutes.POST("/status", h.changeTaskStatusAction)
-	taskRoutes.GET("/list", h.listTasksAction)
-	taskRoutes.GET("/", h.getTaskAction)
+	taskRoutes.GET("/", h.listTasksAction)
+	taskRoutes.GET("/:taskID", h.getTaskAction)
 }
 
 func (h *Task) createTaskAction(c *gin.Context) {
@@ -146,7 +146,7 @@ func (h *Task) getTaskAction(c *gin.Context) {
 
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "app_id", fmt.Sprintf("%d", h.appID))
 
-	taskID, err := strconv.ParseInt(c.Query("task_id"), 10, 64)
+	taskID, err := strconv.ParseInt(c.Param("taskID"), 10, 64)
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to parse task_id", op)
 		response.HandleError(response.ResolveError(err), c)
