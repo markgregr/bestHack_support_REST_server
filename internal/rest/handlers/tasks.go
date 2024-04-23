@@ -33,7 +33,7 @@ func (h *Task) EnrichRoutes(router *gin.Engine) {
 	taskRoutes := router.Group("/task")
 	taskRoutes.POST("/", h.createTaskAction)
 	taskRoutes.POST("/status", h.changeTaskStatusAction)
-	taskRoutes.GET("/", h.listTasksAction)
+	taskRoutes.GET("/list", h.listTasksAction)
 	taskRoutes.GET("/", h.getTaskAction)
 }
 
