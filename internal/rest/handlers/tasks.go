@@ -31,9 +31,10 @@ func NewTaskHandler(api *grpccli.Client, log *logrus.Logger, appID int32) *Task 
 
 func (h *Task) EnrichRoutes(router *gin.Engine) {
 	taskRoutes := router.Group("/task")
-	taskRoutes.POST("/create", h.createTaskAction)
-	taskRoutes.POST("/change-status", h.changeTaskStatusAction)
-	taskRoutes.GET("/list", h.listTasksAction)
+	taskRoutes.POST("/", h.createTaskAction)
+	taskRoutes.POST("/status", h.changeTaskStatusAction)
+	taskRoutes.GET("/", h.listTasksAction)
+	taskRoutes.GET("/", h.getTaskAction)
 }
 
 func (h *Task) createTaskAction(c *gin.Context) {
@@ -130,4 +131,36 @@ func (h *Task) listTasksAction(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, tasks)
+}
+
+func (h *Task) getTaskAction(c *gin.Context) {
+	const op = "handlers.Task.getTaskAction"
+	log := h.log.WithField("operation", op)
+	log.Info("get task")
+
+	accessToken := helper.ExtractTokenFromHeaders(c)
+	if accessToken == "" {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "app_id", fmt.Sprintf("%d", h.appID))
+
+	taskID, err := strconv.ParseInt(c.Query("task_id"), 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to parse task_id", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
+	task, err := h.api.TaskService.GetTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.GetTaskRequest{
+		TaskId: taskID,
+	})
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to get task", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
+	c.JSON(http.StatusOK, task)
 }
