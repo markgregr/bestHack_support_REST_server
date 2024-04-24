@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	grpccli "github.com/markgregr/bestHack_support_REST_server/internal/clients/grpc"
 	tasksform "github.com/markgregr/bestHack_support_REST_server/internal/rest/forms/tasks"
+	"github.com/markgregr/bestHack_support_REST_server/internal/rest/models"
 	"github.com/markgregr/bestHack_support_REST_server/pkg/rest/helper"
 	"github.com/markgregr/bestHack_support_REST_server/pkg/rest/response"
 	tasksv1 "github.com/markgregr/bestHack_support_protos/gen/go/workflow/tasks"
@@ -67,7 +68,25 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, task)
+	c.JSON(http.StatusCreated, models.TaskGetResponse{
+		ID:          task.Id,
+		Title:       task.Title,
+		Description: task.Description,
+		Status:      models.TaskStatus(task.Status),
+		CreatedAt:   task.CreatedAt,
+		FormedAt:    task.FormedAt,
+		CompletedAt: task.CompletedAt,
+		Case: &models.Case{
+			ID:       task.Case.Id,
+			Title:    task.Case.Title,
+			Solution: task.Case.Solution,
+		},
+		Cluster: &models.Cluster{
+			ID:        task.Cluster.Id,
+			Name:      task.Cluster.Name,
+			Frequency: task.Cluster.Frequency,
+		},
+	})
 }
 
 func (h *Task) changeTaskStatusAction(c *gin.Context) {
@@ -99,7 +118,25 @@ func (h *Task) changeTaskStatusAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, task)
+	c.JSON(http.StatusOK, models.TaskGetResponse{
+		ID:          task.Id,
+		Title:       task.Title,
+		Description: task.Description,
+		Status:      models.TaskStatus(task.Status),
+		CreatedAt:   task.CreatedAt,
+		FormedAt:    task.FormedAt,
+		CompletedAt: task.CompletedAt,
+		Case: &models.Case{
+			ID:       task.Case.Id,
+			Title:    task.Case.Title,
+			Solution: task.Case.Solution,
+		},
+		Cluster: &models.Cluster{
+			ID:        task.Cluster.Id,
+			Name:      task.Cluster.Name,
+			Frequency: task.Cluster.Frequency,
+		},
+	})
 }
 
 func (h *Task) listTasksAction(c *gin.Context) {
@@ -163,5 +200,23 @@ func (h *Task) getTaskAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, task)
+	c.JSON(http.StatusOK, models.TaskGetResponse{
+		ID:          task.Id,
+		Title:       task.Title,
+		Description: task.Description,
+		Status:      models.TaskStatus(task.Status),
+		CreatedAt:   task.CreatedAt,
+		FormedAt:    task.FormedAt,
+		CompletedAt: task.CompletedAt,
+		Case: &models.Case{
+			ID:       task.Case.Id,
+			Title:    task.Case.Title,
+			Solution: task.Case.Solution,
+		},
+		Cluster: &models.Cluster{
+			ID:        task.Cluster.Id,
+			Name:      task.Cluster.Name,
+			Frequency: task.Cluster.Frequency,
+		},
+	})
 }
