@@ -68,7 +68,7 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, models.TaskGetResponse{
+	c.JSON(http.StatusCreated, models.Task{
 		ID:          task.Id,
 		Title:       task.Title,
 		Description: task.Description,
@@ -118,7 +118,7 @@ func (h *Task) changeTaskStatusAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.TaskGetResponse{
+	c.JSON(http.StatusOK, models.Task{
 		ID:          task.Id,
 		Title:       task.Title,
 		Description: task.Description,
@@ -200,7 +200,7 @@ func (h *Task) getTaskAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.TaskGetResponse{
+	c.JSON(http.StatusOK, models.Task{
 		ID:          task.Id,
 		Title:       task.Title,
 		Description: task.Description,

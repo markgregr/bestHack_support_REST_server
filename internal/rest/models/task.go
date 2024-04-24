@@ -1,6 +1,6 @@
 package models
 
-type TaskGetResponse struct {
+type Task struct {
 	ID          int64      `json:"id"`
 	Title       string     `json:"title`
 	Description string     `json:"description`
@@ -9,9 +9,22 @@ type TaskGetResponse struct {
 	FormedAt    *string    `json:"formed_at`
 	CompletedAt *string    `json:"completed_at`
 
-	Case *Case `gorm:"foreignKey:CaseID" json:"case`
+	Case *Case `json:"case`
 
-	Cluster *Cluster `gorm:"foreignKey:ClusterID" json:"cluster`
+	Cluster *Cluster `json:"cluster`
 
-	User *User `gorm:"foreignKey:UserID" json:"user`
+	User *User `"json:"user`
+}
+
+type TaskStatus int32
+
+const (
+	TaskStatusOpen TaskStatus = iota
+	TaskStatusInProgress
+	TaskStatusClosed
+)
+
+type User struct {
+	ID    int64  `json:"id"`
+	Email string `json:"email"`
 }

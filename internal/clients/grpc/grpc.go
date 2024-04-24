@@ -6,6 +6,7 @@ import (
 	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	ssov1 "github.com/markgregr/bestHack_support_protos/gen/go/sso"
+	casesv1 "github.com/markgregr/bestHack_support_protos/gen/go/workflow/cases"
 	tasksv1 "github.com/markgregr/bestHack_support_protos/gen/go/workflow/tasks"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -15,9 +16,10 @@ import (
 )
 
 type Client struct {
-	AuthService ssov1.AuthClient
-	TaskService tasksv1.TaskServiceClient
-	log         *logrus.Entry
+	AuthService  ssov1.AuthClient
+	TaskService  tasksv1.TaskServiceClient
+	CasesService casesv1.CaseServiceClient
+	log          *logrus.Entry
 }
 
 func New(ctx context.Context, log *logrus.Entry, targetAddr string, timeout time.Duration, retriesCount int) (*Client, error) {
@@ -45,8 +47,9 @@ func New(ctx context.Context, log *logrus.Entry, targetAddr string, timeout time
 	}
 
 	return &Client{
-		AuthService: ssov1.NewAuthClient(conn),
-		TaskService: tasksv1.NewTaskServiceClient(conn),
-		log:         log,
+		AuthService:  ssov1.NewAuthClient(conn),
+		TaskService:  tasksv1.NewTaskServiceClient(conn),
+		CasesService: casesv1.NewCaseServiceClient(conn),
+		log:          log,
 	}, nil
 }
