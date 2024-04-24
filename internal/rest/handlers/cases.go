@@ -32,11 +32,12 @@ func NewCaseHandler(api *grpccli.Client, log *logrus.Logger, appID int32) *Case 
 }
 
 func (h *Case) EnrichRoutes(router *gin.Engine) {
-	casesRoutes := router.Group("/cluster")
-	casesRoutes.GET("/", h.listClustersAction)
-	casesRoutes.GET("/:clusterID", h.listCasesFromClusterAction)
-	casesRoutes.POST("/:clusterID", h.createCaseAction)
-	casesRoutes.PUT("/:clusterID/:caseID", h.updateCaseAction)
+	clusterRoutes := router.Group("/cluster")
+	clusterRoutes.GET("/", h.listClustersAction)
+	clusterRoutes.GET("/:clusterID", h.listCasesFromClusterAction)
+	clusterRoutes.POST("/:clusterID", h.createCaseAction)
+	casesRoutes := router.Group("/cases")
+	casesRoutes.PUT("/:caseID", h.updateCaseAction)
 	casesRoutes.DELETE("/:caseID", h.deleteCaseAction)
 }
 
