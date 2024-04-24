@@ -188,7 +188,7 @@ func (h *Case) updateCaseAction(c *gin.Context) {
 		return
 	}
 
-	form, verr := casesform.NewCreateCaseForm().ParseAndValidate(c)
+	form, verr := casesform.NewUpdateCaseForm().ParseAndValidate(c)
 	if verr != nil {
 		response.HandleError(verr, c)
 		return
@@ -196,8 +196,8 @@ func (h *Case) updateCaseAction(c *gin.Context) {
 
 	caseItem, err := h.api.CasesService.UpdateCase(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &casesv1.UpdateCaseRequest{
 		Id:       caseID,
-		Title:    form.(*casesform.CreateCaseForm).Title,
-		Solution: form.(*casesform.CreateCaseForm).Solution,
+		Title:    &form.(*casesform.UpdateCaseForm).Title,
+		Solution: &form.(*casesform.UpdateCaseForm).Solution,
 	})
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to update case", op)
