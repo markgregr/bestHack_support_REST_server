@@ -10,15 +10,13 @@ import (
 )
 
 type CreateTaskRequest struct {
-	Title        string `json:"title"`
-	Description  string `json:"description"`
-	ClusterIndex int64  `json:"cluster_index"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type CreateTaskForm struct {
-	Title        string
-	Description  string
-	ClusterIndex int64
+	Title       string
+	Description string
 }
 
 func NewCreateTaskForm() *CreateTaskForm {
@@ -45,7 +43,6 @@ func (f *CreateTaskForm) ParseAndValidate(c *gin.Context) (forms.Former, respons
 	errors := make(map[string]response.ErrorMessage)
 	f.validateAndSetTitle(request, errors)
 	f.validateAndSetDescription(request, errors)
-	f.validateAndSetClusterIndex(request, errors)
 
 	if len(errors) > 0 {
 		return nil, response.NewValidationError(errors)
@@ -56,9 +53,8 @@ func (f *CreateTaskForm) ParseAndValidate(c *gin.Context) (forms.Former, respons
 
 func (f *CreateTaskForm) ConvertToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"title":         f.Title,
-		"description":   f.Description,
-		"cluster_index": f.ClusterIndex,
+		"title":       f.Title,
+		"description": f.Description,
 	}
 }
 
@@ -86,14 +82,14 @@ func (f *CreateTaskForm) validateAndSetDescription(request *CreateTaskRequest, e
 	f.Description = request.Description
 }
 
-func (f *CreateTaskForm) validateAndSetClusterIndex(request *CreateTaskRequest, errors map[string]response.ErrorMessage) {
-	if request.ClusterIndex == 0 {
-		errors["cluster_index"] = response.ErrorMessage{
-			Code:    response.MissedValue,
-			Message: "missed value",
-		}
-		return
-	}
-
-	f.ClusterIndex = request.ClusterIndex
-}
+//func (f *CreateTaskForm) validateAndSetClusterIndex(request *CreateTaskRequest, errors map[string]response.ErrorMessage) {
+//	if request.ClusterIndex == 0 {
+//		errors["cluster_index"] = response.ErrorMessage{
+//			Code:    response.MissedValue,
+//			Message: "missed value",
+//		}
+//		return
+//	}
+//
+//	f.ClusterIndex = request.ClusterIndex
+//}

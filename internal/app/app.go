@@ -100,7 +100,7 @@ func (a *Application) initRestWorker() error {
 
 	apiHandlers := []handlers.APIHandler{
 		handlers.NewAuthHandler(apiService, a.log.Logger, a.cfg.AppID),
-		handlers.NewTaskHandler(apiService, a.log.Logger, a.cfg.AppID),
+		handlers.NewTaskHandler(apiService, a.log.Logger, a.cfg.AppID, a.cfg.AnalURL),
 		handlers.NewCaseHandler(apiService, a.log.Logger, a.cfg.AppID),
 		//handlers.NewMessagerHandler(kafkaProducer, a.log.Logger),
 	}

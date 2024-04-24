@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	grpccli "github.com/markgregr/bestHack_support_REST_server/internal/clients/grpc"
@@ -12,21 +14,24 @@ import (
 	tasksv1 "github.com/markgregr/bestHack_support_protos/gen/go/workflow/tasks"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
 
 type Task struct {
-	log   *logrus.Logger
-	api   *grpccli.Client
-	appID int32
+	log     *logrus.Logger
+	api     *grpccli.Client
+	appID   int32
+	analURL string
 }
 
-func NewTaskHandler(api *grpccli.Client, log *logrus.Logger, appID int32) *Task {
+func NewTaskHandler(api *grpccli.Client, log *logrus.Logger, appID int32, analURL string) *Task {
 	return &Task{
-		log:   log,
-		api:   api,
-		appID: appID,
+		log:     log,
+		api:     api,
+		appID:   appID,
+		analURL: analURL,
 	}
 }
 
@@ -36,6 +41,15 @@ func (h *Task) EnrichRoutes(router *gin.Engine) {
 	taskRoutes.POST("/:taskID/status", h.changeTaskStatusAction)
 	taskRoutes.GET("/", h.listTasksAction)
 	taskRoutes.GET("/:taskID", h.getTaskAction)
+}
+
+type ClusterRequest struct {
+	Message string `json:"message"`
+}
+
+type ClusterResponse struct {
+	ClusterFrequency int `json:"cluster_frequency"`
+	ClusterIndex     int `json:"cluster_index"`
 }
 
 func (h *Task) createTaskAction(c *gin.Context) {
@@ -57,10 +71,42 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		return
 	}
 
+	requestBody, err := json.Marshal(ClusterRequest{
+		Message: form.(*tasksform.CreateTaskForm).Description,
+	})
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to marshal request body", op)
+		response.HandleError(response.NewInternalError(), c)
+		return
+	}
+
+	resp, err := http.Post(h.analURL, "application/json", bytes.NewBuffer(requestBody))
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to send request to anal", op)
+		response.HandleError(response.NewInternalError(), c)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to read response body", op)
+		response.HandleError(response.NewInternalError(), c)
+		return
+	}
+
+	var clusterResp ClusterResponse
+	err = json.Unmarshal(body, &clusterResp)
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to unmarshal response body", op)
+		response.HandleError(response.NewInternalError(), c)
+		return
+	}
+
 	task, err := h.api.TaskService.CreateTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.CreateTaskRequest{
 		Title:        form.(*tasksform.CreateTaskForm).Title,
 		Description:  form.(*tasksform.CreateTaskForm).Description,
-		ClusterIndex: form.(*tasksform.CreateTaskForm).ClusterIndex,
+		ClusterIndex: int64(clusterResp.ClusterIndex),
 	})
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to create task", op)
