@@ -31,9 +31,9 @@ func NewCaseHandler(api *grpccli.Client, log *logrus.Logger, appID int32) *Case 
 }
 
 func (h *Case) EnrichRoutes(router *gin.Engine) {
-	clusterRoutes := router.Group("/cluster")
-	clusterRoutes.GET("/:clusterID", h.getClusterAction)
-	clusterRoutes.POST("/:clusterID", h.createCaseAction)
+	casesRoutes := router.Group("/cluster")
+	casesRoutes.GET("/:clusterID", h.listCasesAction)
+	casesRoutes.POST("/:clusterID", h.createCaseAction)
 }
 
 func (h *Case) createCaseAction(c *gin.Context) {
@@ -85,7 +85,7 @@ func (h *Case) createCaseAction(c *gin.Context) {
 	})
 }
 
-func (h *Case) getClusterAction(c *gin.Context) {
+func (h *Case) listCasesAction(c *gin.Context) {
 	const op = "handlers.Case.getClusterAction"
 	log := h.log.WithField("operation", op)
 	log.Info("get cluster")
@@ -128,33 +128,5 @@ func (h *Case) getClusterAction(c *gin.Context) {
 		})
 	}
 
-	var tasksList []*models.Task
-	for _, task := range cluster.Tasks {
-		tasksList = append(tasksList, &models.Task{
-			ID:          task.Id,
-			Title:       task.Title,
-			Description: task.Description,
-			Status:      models.TaskStatus(task.Status),
-			CreatedAt:   task.CreatedAt,
-			FormedAt:    task.FormedAt,
-			CompletedAt: task.CompletedAt,
-			Case: &models.Case{
-				ID:       task.Case.Id,
-				Title:    task.Case.Title,
-				Solution: task.Case.Solution,
-			},
-			User: &models.User{
-				ID:    task.User.Id,
-				Email: task.User.Email,
-			},
-		})
-	}
-
-	c.JSON(http.StatusOK, models.GetClusterResponse{
-		ID:        cluster.Id,
-		Name:      cluster.Name,
-		Frequency: cluster.Frequency,
-		Cases:     casesList,
-		Tasks:     tasksList,
-	})
+	c.JSON(http.StatusOK, casesList)
 }
