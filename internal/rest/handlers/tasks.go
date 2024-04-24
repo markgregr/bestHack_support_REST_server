@@ -57,9 +57,9 @@ func (h *Task) createTaskAction(c *gin.Context) {
 	}
 
 	task, err := h.api.TaskService.CreateTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.CreateTaskRequest{
-		Title:       form.(*tasksform.CreateTaskForm).Title,
-		Description: form.(*tasksform.CreateTaskForm).Description,
-		ClusterId:   form.(*tasksform.CreateTaskForm).ClusterID,
+		Title:        form.(*tasksform.CreateTaskForm).Title,
+		Description:  form.(*tasksform.CreateTaskForm).Description,
+		ClusterIndex: form.(*tasksform.CreateTaskForm).ClusterIndex,
 	})
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to create task", op)
