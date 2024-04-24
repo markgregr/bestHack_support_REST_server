@@ -114,11 +114,47 @@ func (h *Case) getClusterAction(c *gin.Context) {
 		return
 	}
 
+	var casesList []*models.Case
+	for _, caseItem := range cluster.Cases {
+		casesList = append(casesList, &models.Case{
+			ID:       caseItem.Id,
+			Title:    caseItem.Title,
+			Solution: caseItem.Solution,
+			Cluster: &models.Cluster{
+				ID:        caseItem.Cluster.Id,
+				Name:      caseItem.Cluster.Name,
+				Frequency: caseItem.Cluster.Frequency,
+			},
+		})
+	}
+
+	var tasksList []*models.Task
+	for _, task := range cluster.Tasks {
+		tasksList = append(tasksList, &models.Task{
+			ID:          task.Id,
+			Title:       task.Title,
+			Description: task.Description,
+			Status:      models.TaskStatus(task.Status),
+			CreatedAt:   task.CreatedAt,
+			FormedAt:    task.FormedAt,
+			CompletedAt: task.CompletedAt,
+			Case: &models.Case{
+				ID:       task.Case.Id,
+				Title:    task.Case.Title,
+				Solution: task.Case.Solution,
+			},
+			User: &models.User{
+				ID:    task.User.Id,
+				Email: task.User.Email,
+			},
+		})
+	}
+
 	c.JSON(http.StatusOK, models.GetClusterResponse{
 		ID:        cluster.Id,
 		Name:      cluster.Name,
 		Frequency: cluster.Frequency,
-		Cases:     cluster.Cases,
-		Tasks:     cluster.Tasks,
+		Cases:     casesList,
+		Tasks:     tasksList,
 	})
 }

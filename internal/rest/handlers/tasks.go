@@ -86,6 +86,10 @@ func (h *Task) createTaskAction(c *gin.Context) {
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
 		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
+		},
 	})
 }
 
@@ -167,8 +171,35 @@ func (h *Task) listTasksAction(c *gin.Context) {
 		response.HandleError(response.ResolveError(err), c)
 		return
 	}
+	var tasksList []models.Task
 
-	c.JSON(http.StatusOK, tasks)
+	// Заполнить промежуточную структуру данными из протовской структуры
+	for _, task := range tasks.Tasks {
+		tasksList = append(tasksList, models.Task{
+			ID:          task.Id,
+			Title:       task.Title,
+			Description: task.Description,
+			Status:      models.TaskStatus(task.Status),
+			CreatedAt:   task.CreatedAt,
+			FormedAt:    task.FormedAt,
+			CompletedAt: task.CompletedAt,
+			Case: &models.Case{
+				ID:       task.Case.Id,
+				Title:    task.Case.Title,
+				Solution: task.Case.Solution,
+			},
+			Cluster: &models.Cluster{
+				ID:        task.Cluster.Id,
+				Name:      task.Cluster.Name,
+				Frequency: task.Cluster.Frequency,
+			},
+			User: &models.User{
+				ID:    task.User.Id,
+				Email: task.User.Email,
+			},
+		})
+	}
+	c.JSON(http.StatusOK, tasksList)
 }
 
 func (h *Task) getTaskAction(c *gin.Context) {

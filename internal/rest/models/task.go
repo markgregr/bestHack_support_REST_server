@@ -8,12 +8,9 @@ type Task struct {
 	CreatedAt   string     `json:"created_at`
 	FormedAt    *string    `json:"formed_at`
 	CompletedAt *string    `json:"completed_at`
-
-	Case *Case `json:"case`
-
-	Cluster *Cluster `json:"cluster`
-
-	User *User `"json:"user`
+	Case        *Case      `json:"case`
+	Cluster     *Cluster   `json:"cluster`
+	User        *User      `"json:"user`
 }
 
 type TaskStatus int32
