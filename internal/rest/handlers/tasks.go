@@ -86,10 +86,6 @@ func (h *Task) createTaskAction(c *gin.Context) {
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
 		},
-		User: &models.User{
-			ID:    task.User.Id,
-			Email: task.User.Email,
-		},
 	})
 }
 
@@ -139,6 +135,10 @@ func (h *Task) changeTaskStatusAction(c *gin.Context) {
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
+		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
 		},
 	})
 }
@@ -248,6 +248,10 @@ func (h *Task) getTaskAction(c *gin.Context) {
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
+		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
 		},
 	})
 }
