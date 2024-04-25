@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	grpccli "github.com/markgregr/bestHack_support_REST_server/internal/clients/grpc"
 	casesform "github.com/markgregr/bestHack_support_REST_server/internal/rest/forms/cases"
+	clusterform "github.com/markgregr/bestHack_support_REST_server/internal/rest/forms/cluster"
 	"github.com/markgregr/bestHack_support_REST_server/internal/rest/models"
 	"github.com/markgregr/bestHack_support_REST_server/pkg/rest/helper"
 	"github.com/markgregr/bestHack_support_REST_server/pkg/rest/response"
@@ -270,8 +271,15 @@ func (h *Case) updateClusterNameAction(c *gin.Context) {
 		return
 	}
 
+	form, verr := clusterform.NewUpdateClusterForm().ParseAndValidate(c)
+	if verr != nil {
+		response.HandleError(verr, c)
+		return
+	}
+
 	cluster, err := h.api.CasesService.UpdateClusterName(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &casesv1.UpdateClusterNameRequest{
-		Id: clusterID,
+		Id:   clusterID,
+		Name: form.(*clusterform.UpdateClusterForm).Name,
 	})
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to update cluster name", op)
