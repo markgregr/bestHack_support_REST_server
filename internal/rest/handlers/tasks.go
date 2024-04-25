@@ -108,6 +108,7 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		Title:        form.(*tasksform.CreateTaskForm).Title,
 		Description:  form.(*tasksform.CreateTaskForm).Description,
 		ClusterIndex: int64(clusterResp.ClusterIndex),
+		Frequency:    int64(clusterResp.ClusterFrequency),
 	})
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to create task", op)
