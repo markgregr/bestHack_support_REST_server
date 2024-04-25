@@ -47,7 +47,7 @@ func New(cfg *config.Config, log *log.Entry) (*Application, error) {
 }
 
 func (a *Application) Run() {
-	a.Done = make(chan struct{}) // Инициализируем канал done
+	a.Done = make(chan struct{})
 	a.manager.StartAll()
 	go a.registerShutdown()
 }
@@ -61,10 +61,6 @@ func (a *Application) bootstrap() error {
 	if err := a.initRestWorker(); err != nil {
 		return fmt.Errorf("failed to init rest worker: %w", err)
 	}
-
-	//if err := a.initKafkaWorkers(); err != nil {
-	//	return fmt.Errorf("failed to init kafka workers: %w", err)
-	//}
 
 	a.initPrometheusWorker()
 
@@ -93,16 +89,10 @@ func (a *Application) initRestWorker() error {
 		return fmt.Errorf("%s: failed to load grpc client: %w", op, err)
 	}
 
-	//var kafkaProducer *producer.Producer
-	//if err := a.container.Load(&kafkaProducer); err != nil {
-	//	return fmt.Errorf("%s: failed to load kafka producer: %w", op, err)
-	//}
-
 	apiHandlers := []handlers.APIHandler{
 		handlers.NewAuthHandler(apiService, a.log.Logger, a.cfg.AppID),
 		handlers.NewTaskHandler(apiService, a.log.Logger, a.cfg.AppID, a.cfg.AnalURL),
 		handlers.NewCaseHandler(apiService, a.log.Logger, a.cfg.AppID),
-		//handlers.NewMessagerHandler(kafkaProducer, a.log.Logger),
 	}
 
 	w := rest.NewWorker(
@@ -126,25 +116,13 @@ func (a *Application) initPrometheusWorker() {
 	a.manager.AddWorker(process.NewServerWorker("prometheus", server))
 }
 
-//func (a *Application) initKafkaWorkers() error {
-//	const op = "Application.initKafkaWorkers"
-//	a.log.WithField("operation", op).Info(("initializing Kafka workers"))
-//
-//	producer := producer.NewProducerWorker(a.cfg.Clients.Kafka.Broker, a.cfg.Clients.Kafka.Topic, a.log.Logger)
-//
-//	a.manager.AddWorker(process.NewCallbackWorker("Kafka producer", producer.Start))
-//	a.container.Set(producer)
-//
-//	return nil
-//}
-
 func (a *Application) registerShutdown() {
 	const op = "Application.registerShutdown"
 
 	go func(manager *process.Manager) {
 		<-a.sigChan
 		manager.StopAll()
-		close(a.Done) // Закрываем канал done после остановки всех воркеров
+		close(a.Done)
 		a.log.WithField("operation", op).Info("registering shutdown")
 	}(a.manager)
 

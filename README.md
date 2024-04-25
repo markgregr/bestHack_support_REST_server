@@ -1,2 +1,3 @@
-# bestHack_support_REST_server
-bestHack_support_REST_server
+# REST_API сервер 
+## Команда The Brawlers
+### Lля работы тех специалистов по решению проблемы
