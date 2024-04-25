@@ -36,6 +36,7 @@ func (h *Case) EnrichRoutes(router *gin.Engine) {
 	clusterRoutes.GET("/", h.listClustersAction)
 	clusterRoutes.GET("/:clusterID", h.listCasesFromClusterAction)
 	clusterRoutes.POST("/:clusterID", h.createCaseAction)
+	clusterRoutes.PUT("/:clusterID", h.updateClusterNameAction)
 	casesRoutes := router.Group("/cases")
 	casesRoutes.PUT("/:caseID", h.updateCaseAction)
 	casesRoutes.DELETE("/:caseID", h.deleteCaseAction)
@@ -78,7 +79,7 @@ func (h *Case) createCaseAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.Case{
+	c.JSON(http.StatusCreated, models.Case{
 		ID:       caseItem.Id,
 		Title:    caseItem.Title,
 		Solution: caseItem.Solution,
@@ -246,5 +247,41 @@ func (h *Case) deleteCaseAction(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.Status(http.StatusNoContent)
+}
+
+func (h *Case) updateClusterNameAction(c *gin.Context) {
+	const op = "handlers.Case.updateClusterNameAction"
+	log := h.log.WithField("operation", op)
+	log.Info("update cluster name")
+
+	accessToken := helper.ExtractTokenFromHeaders(c)
+	if accessToken == "" {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "app_id", fmt.Sprintf("%d", h.appID))
+
+	clusterID, err := strconv.ParseInt(c.Param("clusterID"), 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to parse clusterID", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
+	cluster, err := h.api.CasesService.UpdateClusterName(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &casesv1.UpdateClusterNameRequest{
+		Id: clusterID,
+	})
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to update cluster name", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Cluster{
+		ID:        cluster.Id,
+		Name:      cluster.Name,
+		Frequency: cluster.Frequency,
+	})
 }
