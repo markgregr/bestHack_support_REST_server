@@ -4,6 +4,7 @@ type Task struct {
 	ID          int64      `json:"id"`
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
+	Solution    *string    `json:"solution"`
 	Status      TaskStatus `json:"status"`
 	CreatedAt   string     `json:"created_at"`
 	FormedAt    *string    `json:"formed_at"`

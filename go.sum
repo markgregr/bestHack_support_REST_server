@@ -148,6 +148,12 @@ github.com/markgregr/bestHack_support_protos v0.0.31 h1:RMNpfAU6nsFkGjERyQa3EAIv
 github.com/markgregr/bestHack_support_protos v0.0.31/go.mod h1:A9gdlurquNBGmOB4Rr7j8Q7U1mIdo+/vA2gKb5yy6hU=
 github.com/markgregr/bestHack_support_protos v0.0.32 h1:SisQJaVfQviTkDgsoMYajO8HHMxZZ0i4rBxYiCJN8/U=
 github.com/markgregr/bestHack_support_protos v0.0.32/go.mod h1:A9gdlurquNBGmOB4Rr7j8Q7U1mIdo+/vA2gKb5yy6hU=
+github.com/markgregr/bestHack_support_protos v0.0.33 h1:8Xo9tPYDo9gjSykKco3cGPeVy3XvUdOAFIAXbm3+D2s=
+github.com/markgregr/bestHack_support_protos v0.0.33/go.mod h1:A9gdlurquNBGmOB4Rr7j8Q7U1mIdo+/vA2gKb5yy6hU=
+github.com/markgregr/bestHack_support_protos v0.0.34 h1:cEZ/erhv/SSDILtWQ+4D+jZ5lPHUVGzblKouMdFbbWM=
+github.com/markgregr/bestHack_support_protos v0.0.34/go.mod h1:A9gdlurquNBGmOB4Rr7j8Q7U1mIdo+/vA2gKb5yy6hU=
+github.com/markgregr/bestHack_support_protos v0.0.36 h1:KOPSturuvCdsy3hocczMEAM1LIUUGjBgxXpC5xnZtJ4=
+github.com/markgregr/bestHack_support_protos v0.0.36/go.mod h1:A9gdlurquNBGmOB4Rr7j8Q7U1mIdo+/vA2gKb5yy6hU=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=

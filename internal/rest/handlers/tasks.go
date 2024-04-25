@@ -42,6 +42,7 @@ func (h *Task) EnrichRoutes(router *gin.Engine) {
 	taskRoutes.GET("/", h.listTasksAction)
 	taskRoutes.GET("/:taskID", h.getTaskAction)
 	taskRoutes.PUT("/:taskID/case/:caseID", h.AddCaseToTaskAction)
+	taskRoutes.PUT("/:taskID", h.AddSolutionToTaskAction)
 }
 
 type ClusterRequest struct {
@@ -120,6 +121,7 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		ID:          task.Id,
 		Title:       task.Title,
 		Description: task.Description,
+		Solution:    task.Solution,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -170,6 +172,7 @@ func (h *Task) changeTaskStatusAction(c *gin.Context) {
 		ID:          task.Id,
 		Title:       task.Title,
 		Description: task.Description,
+		Solution:    task.Solution,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -227,6 +230,7 @@ func (h *Task) listTasksAction(c *gin.Context) {
 			ID:          task.Id,
 			Title:       task.Title,
 			Description: task.Description,
+			Solution:    task.Solution,
 			Status:      models.TaskStatus(task.Status),
 			CreatedAt:   task.CreatedAt,
 			FormedAt:    task.FormedAt,
@@ -283,6 +287,7 @@ func (h *Task) getTaskAction(c *gin.Context) {
 		ID:          task.Id,
 		Title:       task.Title,
 		Description: task.Description,
+		Solution:    task.Solution,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -345,6 +350,69 @@ func (h *Task) AddCaseToTaskAction(c *gin.Context) {
 		ID:          task.Id,
 		Title:       task.Title,
 		Description: task.Description,
+		Solution:    task.Solution,
+		Status:      models.TaskStatus(task.Status),
+		CreatedAt:   task.CreatedAt,
+		FormedAt:    task.FormedAt,
+		CompletedAt: task.CompletedAt,
+		Case: &models.Case{
+			ID:       task.Case.Id,
+			Title:    task.Case.Title,
+			Solution: task.Case.Solution,
+		},
+		Cluster: &models.Cluster{
+			ID:        task.Cluster.Id,
+			Name:      task.Cluster.Name,
+			Frequency: task.Cluster.Frequency,
+		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
+		},
+	})
+}
+
+func (h *Task) AddSolutionToTaskAction(c *gin.Context) {
+	const op = "handlers.Task.AddCaseToTaskAction"
+	log := h.log.WithField("operation", op)
+	log.Info("add case to task")
+
+	accessToken := helper.ExtractTokenFromHeaders(c)
+	if accessToken == "" {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "app_id", fmt.Sprintf("%d", h.appID))
+
+	taskID, err := strconv.ParseInt(c.Param("taskID"), 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to parse task_id", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
+	form, verr := tasksform.NewAddSolutionToTaskForm().ParseAndValidate(c)
+	if verr != nil {
+		response.HandleError(verr, c)
+		return
+	}
+
+	task, err := h.api.TaskService.AddSolutionToTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.AddSolutionToTaskRequest{
+		TaskId:   taskID,
+		Solution: form.(*tasksform.AddSolutionToTaskForm).Solution,
+	})
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to add case to task", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Task{
+		ID:          task.Id,
+		Title:       task.Title,
+		Description: task.Description,
+		Solution:    task.Solution,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
