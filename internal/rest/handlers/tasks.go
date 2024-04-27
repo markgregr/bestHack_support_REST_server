@@ -59,7 +59,7 @@ type ClusterResponse struct {
 	AverageReaction  float64 `json:"average_reaction"`
 }
 
-const delay = 60
+const delay = 300
 
 func (h *Task) createTaskAction(c *gin.Context) {
 	const op = "handlers.Task.createTaskAction"
@@ -117,7 +117,7 @@ func (h *Task) createTaskAction(c *gin.Context) {
 	timerDone2 := make(chan bool)
 
 	// Создаем таймер
-	timer1 := time.NewTimer(time.Duration(clusterResp.AverageDuration+delay) * time.Second)
+	timer1 := time.NewTimer(time.Duration(clusterResp.AverageReaction+delay) * time.Second)
 	//timer1 := time.NewTimer(time.Duration(60) * time.Second)
 	// Запускаем горутину для ожидания срабатывания таймера
 	go func() {
