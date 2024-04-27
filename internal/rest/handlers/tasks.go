@@ -124,7 +124,7 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		// Таймер истек, отправляем сигнал в канал
 		timerDone <- true
 	}()
-
+	log.Error(clusterResp)
 	task, err := h.api.TaskService.CreateTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.CreateTaskRequest{
 		Title:           form.(*tasksform.CreateTaskForm).Title,
 		Description:     form.(*tasksform.CreateTaskForm).Description,
