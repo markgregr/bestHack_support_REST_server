@@ -253,6 +253,10 @@ func (h *Task) changeTaskStatusAction(c *gin.Context) {
 			Title:    task.Case.Title,
 			Solution: task.Case.Solution,
 		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
+		},
 		Cluster: &models.Cluster{
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
@@ -365,6 +369,10 @@ func (h *Task) getTaskAction(c *gin.Context) {
 			Title:    task.Case.Title,
 			Solution: task.Case.Solution,
 		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
+		},
 		Cluster: &models.Cluster{
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
@@ -425,6 +433,10 @@ func (h *Task) AddCaseToTaskAction(c *gin.Context) {
 			Title:    task.Case.Title,
 			Solution: task.Case.Solution,
 		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
+		},
 		Cluster: &models.Cluster{
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
@@ -484,6 +496,10 @@ func (h *Task) AddSolutionToTaskAction(c *gin.Context) {
 			Title:    task.Case.Title,
 			Solution: task.Case.Solution,
 		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
+		},
 		Cluster: &models.Cluster{
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
@@ -536,6 +552,10 @@ func (h *Task) RemoveCaseFromTaskAction(c *gin.Context) {
 			Title:    task.Case.Title,
 			Solution: task.Case.Solution,
 		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
+		},
 		Cluster: &models.Cluster{
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
@@ -587,6 +607,10 @@ func (h *Task) RemoveSolutionFromTaskAction(c *gin.Context) {
 			ID:       task.Case.Id,
 			Title:    task.Case.Title,
 			Solution: task.Case.Solution,
+		},
+		User: &models.User{
+			ID:    task.User.Id,
+			Email: task.User.Email,
 		},
 		Cluster: &models.Cluster{
 			ID:        task.Cluster.Id,
