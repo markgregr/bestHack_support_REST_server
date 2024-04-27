@@ -116,8 +116,8 @@ func (h *Task) createTaskAction(c *gin.Context) {
 	timerDone := make(chan bool)
 
 	// Создаем таймер
-	timer := time.NewTimer(time.Duration(clusterResp.AverageDuration+delay) * time.Second)
-
+	//timer := time.NewTimer(time.Duration(clusterResp.AverageDuration+delay) * time.Second)
+	timer := time.NewTimer(time.Duration(60) * time.Second)
 	// Запускаем горутину для ожидания срабатывания таймера
 	go func() {
 		<-timer.C
