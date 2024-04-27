@@ -59,10 +59,7 @@ type ClusterResponse struct {
 	AverageReaction  float64 `json:"average_reaction"`
 }
 
-func NewTimer(seconds int, action func()) *time.Timer {
-	timer := time.AfterFunc(time.Second*time.Duration(seconds), action)
-	return timer
-}
+const delay = 300
 
 func (h *Task) createTaskAction(c *gin.Context) {
 	const op = "handlers.Task.createTaskAction"
@@ -115,6 +112,19 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		return
 	}
 
+	// Создаем канал для синхронизации
+	timerDone := make(chan bool)
+
+	// Создаем таймер
+	timer := time.NewTimer(time.Duration(clusterResp.AverageDuration+delay) * time.Second)
+
+	// Запускаем горутину для ожидания срабатывания таймера
+	go func() {
+		<-timer.C
+		// Таймер истек, отправляем сигнал в канал
+		timerDone <- true
+	}()
+
 	task, err := h.api.TaskService.CreateTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.CreateTaskRequest{
 		Title:        form.(*tasksform.CreateTaskForm).Title,
 		Description:  form.(*tasksform.CreateTaskForm).Description,
@@ -126,10 +136,12 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		response.HandleError(response.ResolveError(err), c)
 		return
 	}
-	// Run timer for 60 seconds. When timer expires,
-	// call a function to change task status.
-	timer := NewTimer(60, func() {
-		_, err := h.api.TaskService.ChangeTaskStatus(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.ChangeTaskStatusRequest{
+
+	// Ожидаем срабатывания таймера или завершения работы контекста
+	select {
+	case <-timerDone:
+		// Таймер истек, можно вызвать gRPC-сервер
+		_, err := h.api.TaskService.AppointUserToTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.AppointUserToTaskRequest{
 			TaskId: task.Id,
 		})
 		if err != nil {
@@ -138,8 +150,10 @@ func (h *Task) createTaskAction(c *gin.Context) {
 			return
 		}
 		log.Infof("%s: Task status changed successfully", op)
-	})
-	defer timer.Stop()
+	case <-ctx.Done():
+		// Контекст отменен, необходимо прекратить ожидание
+		return
+	}
 
 	c.JSON(http.StatusCreated, models.Task{
 		ID:          task.Id,
