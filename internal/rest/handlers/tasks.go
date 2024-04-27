@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type Task struct {
@@ -52,8 +53,15 @@ type ClusterRequest struct {
 }
 
 type ClusterResponse struct {
-	ClusterFrequency int `json:"cluster_frequency"`
-	ClusterIndex     int `json:"cluster_index"`
+	ClusterFrequency int     `json:"cluster_frequency"`
+	ClusterIndex     int     `json:"cluster_index"`
+	AverageDuration  float64 `json:"average_duration"`
+	AverageReaction  float64 `json:"average_reaction"`
+}
+
+func NewTimer(seconds int, action func()) *time.Timer {
+	timer := time.AfterFunc(time.Second*time.Duration(seconds), action)
+	return timer
 }
 
 func (h *Task) createTaskAction(c *gin.Context) {
@@ -118,6 +126,20 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		response.HandleError(response.ResolveError(err), c)
 		return
 	}
+	// Run timer for 60 seconds. When timer expires,
+	// call a function to change task status.
+	timer := NewTimer(60, func() {
+		_, err := h.api.TaskService.ChangeTaskStatus(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.ChangeTaskStatusRequest{
+			TaskId: task.Id,
+		})
+		if err != nil {
+			log.WithError(err).Errorf("%s: failed to change task status", op)
+			response.HandleError(response.ResolveError(err), c)
+			return
+		}
+		log.Infof("%s: Task status changed successfully", op)
+	})
+	defer timer.Stop()
 
 	c.JSON(http.StatusCreated, models.Task{
 		ID:          task.Id,
