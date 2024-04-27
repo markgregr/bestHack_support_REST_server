@@ -113,17 +113,29 @@ func (h *Task) createTaskAction(c *gin.Context) {
 	}
 
 	// Создаем канал для синхронизации
-	timerDone := make(chan bool)
+	timerDone1 := make(chan bool)
+	timerDone2 := make(chan bool)
 
 	// Создаем таймер
-	//timer := time.NewTimer(time.Duration(clusterResp.AverageDuration+delay) * time.Second)
-	timer := time.NewTimer(time.Duration(60) * time.Second)
+	timer1 := time.NewTimer(time.Duration(clusterResp.AverageDuration+delay) * time.Second)
+	//timer1 := time.NewTimer(time.Duration(60) * time.Second)
 	// Запускаем горутину для ожидания срабатывания таймера
 	go func() {
-		<-timer.C
+		<-timer1.C
 		// Таймер истек, отправляем сигнал в канал
-		timerDone <- true
+		timerDone1 <- true
 	}()
+
+	// Создаем таймер
+	timer2 := time.NewTimer(time.Duration(clusterResp.AverageReaction) * time.Second)
+	//timer2 := time.NewTimer(time.Duration(60) * time.Second)
+	// Запускаем горутину для ожидания срабатывания таймера
+	go func() {
+		<-timer2.C
+		// Таймер истек, отправляем сигнал в канал
+		timerDone2 <- true
+	}()
+
 	log.Error(clusterResp)
 	task, err := h.api.TaskService.CreateTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.CreateTaskRequest{
 		Title:           form.(*tasksform.CreateTaskForm).Title,
@@ -140,9 +152,27 @@ func (h *Task) createTaskAction(c *gin.Context) {
 
 	// Ожидаем срабатывания таймера или завершения работы контекста
 	select {
-	case <-timerDone:
+	case <-timerDone1:
 		// Таймер истек, можно вызвать gRPC-сервер
 		_, err := h.api.TaskService.AppointUserToTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.AppointUserToTaskRequest{
+			TaskId: task.Id,
+		})
+		if err != nil {
+			log.WithError(err).Errorf("%s: failed to change task status", op)
+			response.HandleError(response.ResolveError(err), c)
+			return
+		}
+		log.Infof("%s: Task status changed successfully", op)
+	case <-ctx.Done():
+		// Контекст отменен, необходимо прекратить ожидание
+		return
+	}
+
+	// Ожидаем срабатывания таймера или завершения работы контекста
+	select {
+	case <-timerDone2:
+		// Таймер истек, можно вызвать gRPC-сервер
+		_, err := h.api.TaskService.FireTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.FireTaskRequest{
 			TaskId: task.Id,
 		})
 		if err != nil {
@@ -161,6 +191,7 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		Title:       task.Title,
 		Description: task.Description,
 		Solution:    task.Solution,
+		Fire:        task.Fire,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -212,6 +243,7 @@ func (h *Task) changeTaskStatusAction(c *gin.Context) {
 		Title:       task.Title,
 		Description: task.Description,
 		Solution:    task.Solution,
+		Fire:        task.Fire,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -225,10 +257,6 @@ func (h *Task) changeTaskStatusAction(c *gin.Context) {
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
-		},
-		User: &models.User{
-			ID:    task.User.Id,
-			Email: task.User.Email,
 		},
 	})
 }
@@ -327,6 +355,7 @@ func (h *Task) getTaskAction(c *gin.Context) {
 		Title:       task.Title,
 		Description: task.Description,
 		Solution:    task.Solution,
+		Fire:        task.Fire,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -340,10 +369,6 @@ func (h *Task) getTaskAction(c *gin.Context) {
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
-		},
-		User: &models.User{
-			ID:    task.User.Id,
-			Email: task.User.Email,
 		},
 	})
 }
@@ -390,6 +415,7 @@ func (h *Task) AddCaseToTaskAction(c *gin.Context) {
 		Title:       task.Title,
 		Description: task.Description,
 		Solution:    task.Solution,
+		Fire:        task.Fire,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -403,10 +429,6 @@ func (h *Task) AddCaseToTaskAction(c *gin.Context) {
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
-		},
-		User: &models.User{
-			ID:    task.User.Id,
-			Email: task.User.Email,
 		},
 	})
 }
@@ -452,6 +474,7 @@ func (h *Task) AddSolutionToTaskAction(c *gin.Context) {
 		Title:       task.Title,
 		Description: task.Description,
 		Solution:    task.Solution,
+		Fire:        task.Fire,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -465,10 +488,6 @@ func (h *Task) AddSolutionToTaskAction(c *gin.Context) {
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
-		},
-		User: &models.User{
-			ID:    task.User.Id,
-			Email: task.User.Email,
 		},
 	})
 }
@@ -507,6 +526,7 @@ func (h *Task) RemoveCaseFromTaskAction(c *gin.Context) {
 		Title:       task.Title,
 		Description: task.Description,
 		Solution:    task.Solution,
+		Fire:        task.Fire,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -520,10 +540,6 @@ func (h *Task) RemoveCaseFromTaskAction(c *gin.Context) {
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
-		},
-		User: &models.User{
-			ID:    task.User.Id,
-			Email: task.User.Email,
 		},
 	})
 }
@@ -562,6 +578,7 @@ func (h *Task) RemoveSolutionFromTaskAction(c *gin.Context) {
 		Title:       task.Title,
 		Description: task.Description,
 		Solution:    task.Solution,
+		Fire:        task.Fire,
 		Status:      models.TaskStatus(task.Status),
 		CreatedAt:   task.CreatedAt,
 		FormedAt:    task.FormedAt,
@@ -575,10 +592,6 @@ func (h *Task) RemoveSolutionFromTaskAction(c *gin.Context) {
 			ID:        task.Cluster.Id,
 			Name:      task.Cluster.Name,
 			Frequency: task.Cluster.Frequency,
-		},
-		User: &models.User{
-			ID:    task.User.Id,
-			Email: task.User.Email,
 		},
 	})
 }

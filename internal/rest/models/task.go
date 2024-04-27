@@ -5,6 +5,7 @@ type Task struct {
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
 	Solution    *string    `json:"solution"`
+	Fire        bool       `json:"fire"`
 	Status      TaskStatus `json:"status"`
 	CreatedAt   string     `json:"created_at"`
 	FormedAt    *string    `json:"formed_at"`
