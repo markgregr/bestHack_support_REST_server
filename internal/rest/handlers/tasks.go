@@ -64,7 +64,7 @@ type ClusterResponse struct {
 	AverageReaction  float64 `json:"average_reaction"`
 }
 
-const delay = 300
+const delay = 60
 
 func (h *Task) createTaskAction(c *gin.Context) {
 	const op = "handlers.Task.createTaskAction"
