@@ -113,30 +113,6 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		return
 	}
 
-	// Создаем канал для синхронизации
-	timerDone1 := make(chan bool)
-	timerDone2 := make(chan bool)
-
-	// Запускаем горутину для ожидания срабатывания таймера
-	go func() {
-		// Создаем таймер
-		timer1 := time.NewTimer(time.Duration(clusterResp.AverageReaction) * time.Second)
-		//timer1 := time.NewTimer(time.Duration(60) * time.Second)
-		<-timer1.C
-		// Таймер истек, отправляем сигнал в канал
-		timerDone1 <- true
-	}()
-
-	// Запускаем горутину для ожидания срабатывания таймера
-	go func() {
-		// Создаем таймер
-		timer2 := time.NewTimer(time.Duration(clusterResp.AverageReaction+delay) * time.Second)
-		//timer2 := time.NewTimer(time.Duration(10) * time.Second)
-		<-timer2.C
-		// Таймер истек, отправляем сигнал в канал
-		timerDone2 <- true
-	}()
-
 	log.Error(clusterResp)
 	task, err := h.api.TaskService.CreateTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.CreateTaskRequest{
 		Title:           form.(*tasksform.CreateTaskForm).Title,
@@ -172,6 +148,31 @@ func (h *Task) createTaskAction(c *gin.Context) {
 			Frequency: task.Cluster.Frequency,
 		},
 	})
+
+	// Создаем канал для синхронизации
+	timerDone1 := make(chan bool)
+	timerDone2 := make(chan bool)
+
+	// Запускаем горутину для ожидания срабатывания таймера
+	go func() {
+		// Создаем таймер
+		timer1 := time.NewTimer(time.Duration(clusterResp.AverageReaction) * time.Second)
+		//timer1 := time.NewTimer(time.Duration(60) * time.Second)
+		<-timer1.C
+		// Таймер истек, отправляем сигнал в канал
+		timerDone1 <- true
+	}()
+
+	// Запускаем горутину для ожидания срабатывания таймера
+	go func() {
+		// Создаем таймер
+		timer2 := time.NewTimer(time.Duration(clusterResp.AverageReaction+delay) * time.Second)
+		//timer2 := time.NewTimer(time.Duration(10) * time.Second)
+		<-timer2.C
+		// Таймер истек, отправляем сигнал в канал
+		timerDone2 <- true
+	}()
+
 	// Ожидаем срабатывания таймера или завершения работы контекста
 	select {
 	case <-timerDone1:
