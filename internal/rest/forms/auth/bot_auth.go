@@ -57,7 +57,9 @@ func (f *BotAuthForm) ParseAndValidate(c *gin.Context) (forms.Former, response.E
 
 func (f *BotAuthForm) ConvertToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"email": f.Email,
+		"email":    f.Email,
+		"password": f.Password,
+		"username": f.Username,
 	}
 }
 
