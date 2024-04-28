@@ -55,6 +55,7 @@ type ClusterRequest struct {
 type ClusterResponse struct {
 	ClusterFrequency int     `json:"cluster_frequency"`
 	ClusterIndex     int     `json:"cluster_index"`
+	ClusterName      string  `json:"cluster_name"`
 	AverageDuration  float64 `json:"average_duration"`
 	AverageReaction  float64 `json:"average_reaction"`
 }
@@ -141,6 +142,7 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		Title:           form.(*tasksform.CreateTaskForm).Title,
 		Description:     form.(*tasksform.CreateTaskForm).Description,
 		ClusterIndex:    int64(clusterResp.ClusterIndex),
+		ClusterName:     clusterResp.ClusterName,
 		Frequency:       int64(clusterResp.ClusterFrequency),
 		AverageDuration: float32(clusterResp.AverageDuration),
 	})
