@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/golang/protobuf/ptypes/empty"
 	grpccli "github.com/markgregr/bestHack_support_REST_server/internal/clients/grpc"
 	tasksform "github.com/markgregr/bestHack_support_REST_server/internal/rest/forms/tasks"
 	"github.com/markgregr/bestHack_support_REST_server/internal/rest/models"
@@ -46,6 +47,9 @@ func (h *Task) EnrichRoutes(router *gin.Engine) {
 	taskRoutes.PUT("/:taskID", h.AddSolutionToTaskAction)
 	taskRoutes.DELETE("/:taskID/case", h.RemoveCaseFromTaskAction)
 	taskRoutes.DELETE("/:taskID/solution", h.RemoveSolutionFromTaskAction)
+	userRoutes := router.Group("/user")
+	userRoutes.GET("/:userID/task", h.listTasksByUserIDAction)
+	userRoutes.GET("/", h.listUsersAction)
 }
 
 type ClusterRequest struct {
@@ -619,4 +623,97 @@ func (h *Task) RemoveSolutionFromTaskAction(c *gin.Context) {
 			Frequency: task.Cluster.Frequency,
 		},
 	})
+}
+
+func (h *Task) listTasksByUserIDAction(c *gin.Context) {
+	const op = "handlers.Task.listTasksByUserIDAction"
+	log := h.log.WithField("operation", op)
+	log.Info("list tasks by user_id")
+
+	accessToken := helper.ExtractTokenFromHeaders(c)
+	if accessToken == "" {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "app_id", fmt.Sprintf("%d", h.appID))
+
+	userID, err := strconv.ParseInt(c.Param("userID"), 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to parse user_id", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
+	tasks, err := h.api.TaskService.ListTasksByUserID(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.ListTasksByUserIDRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to list tasks by user_id", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+	var tasksList []models.Task
+
+	// Заполнить промежуточную структуру данными из протовской структуры
+	for _, task := range tasks.Tasks {
+		tasksList = append(tasksList, models.Task{
+			ID:          task.Id,
+			Title:       task.Title,
+			Description: task.Description,
+			Fire:        task.Fire,
+			Solution:    task.Solution,
+			Status:      models.TaskStatus(task.Status),
+			CreatedAt:   task.CreatedAt,
+			FormedAt:    task.FormedAt,
+			CompletedAt: task.CompletedAt,
+			Case: &models.Case{
+				ID:       task.Case.Id,
+				Title:    task.Case.Title,
+				Solution: task.Case.Solution,
+			},
+			Cluster: &models.Cluster{
+				ID:        task.Cluster.Id,
+				Name:      task.Cluster.Name,
+				Frequency: task.Cluster.Frequency,
+			},
+			User: &models.User{
+				ID:    task.User.Id,
+				Email: task.User.Email,
+			},
+		})
+	}
+	c.JSON(http.StatusOK, tasksList)
+}
+
+func (h *Task) listUsersAction(c *gin.Context) {
+	const op = "handlers.Task.listUsersAction"
+	log := h.log.WithField("operation", op)
+	log.Info("list users")
+
+	accessToken := helper.ExtractTokenFromHeaders(c)
+	if accessToken == "" {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "app_id", fmt.Sprintf("%d", h.appID))
+
+	users, err := h.api.TaskService.ListUsers(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &empty.Empty{})
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to list users", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+	var usersList []models.User
+
+	// Заполнить промежуточную структуру данными из протовской структуры
+	for _, user := range users.Users {
+		usersList = append(usersList, models.User{
+			ID:              user.Id,
+			Email:           user.Email,
+			AvarageDuration: user.AvarageDuration,
+		})
+	}
+	c.JSON(http.StatusOK, usersList)
 }

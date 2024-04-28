@@ -24,6 +24,7 @@ const (
 )
 
 type User struct {
-	ID    int64  `json:"id"`
-	Email string `json:"email"`
+	ID              int64   `json:"id"`
+	Email           string  `json:"email"`
+	AvarageDuration float32 `json:"avarage_duration"`
 }
