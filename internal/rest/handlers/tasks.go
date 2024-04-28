@@ -638,6 +638,13 @@ func (h *Task) listTasksByUserIDAction(c *gin.Context) {
 
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "app_id", fmt.Sprintf("%d", h.appID))
 
+	status, err := strconv.Atoi(c.Query("status"))
+	if err != nil {
+		log.WithError(err).Errorf("%s: failed to parse status", op)
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
 	userID, err := strconv.ParseInt(c.Param("userID"), 10, 64)
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to parse user_id", op)
@@ -647,6 +654,7 @@ func (h *Task) listTasksByUserIDAction(c *gin.Context) {
 
 	tasks, err := h.api.TaskService.ListTasksByUserID(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.ListTasksByUserIDRequest{
 		UserId: userID,
+		Status: int64(status),
 	})
 	if err != nil {
 		log.WithError(err).Errorf("%s: failed to list tasks by user_id", op)
