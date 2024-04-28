@@ -58,6 +58,23 @@ func NewInvalidCredentialsError() *InvalidCredentialsError {
 	return &InvalidCredentialsError{}
 }
 
+type UnauthorizedError struct {
+	BaseError
+}
+
+func (e *UnauthorizedError) PublicMessage() string {
+	return "unauthorized"
+}
+
+func (e *UnauthorizedError) GetHTTPStatus() int {
+	return http.StatusUnauthorized
+}
+
+func NewUnauthorizedError() *UnauthorizedError {
+	return &UnauthorizedError{}
+
+}
+
 type ErrorMessage struct {
 	Code    ErrCode `json:"code"`
 	Message string  `json:"message"`

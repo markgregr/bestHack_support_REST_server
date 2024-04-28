@@ -7,6 +7,7 @@ import (
 var (
 	ErrInvalidCredentials = "invalid credentials"
 	ErrUserExist          = "user already exists"
+	ErrUnauthorized       = "Unauthenticated"
 )
 
 func ResolveError(err error) Error {
@@ -20,6 +21,8 @@ func ResolveError(err error) Error {
 		return NewUserExistError()
 	case ErrInvalidCredentials:
 		return NewInvalidCredentialsError()
+	case ErrUnauthorized:
+		return NewUnauthorizedError()
 	default:
 		return NewInternalError()
 	}
