@@ -35,6 +35,7 @@ func (h *Auth) EnrichRoutes(router *gin.Engine) {
 	authRoutes.POST("/register", h.registerAction)
 	authRoutes.POST("/login", h.loginAction)
 	authRoutes.POST("/logout", h.logoutAction)
+	authRoutes.POST("/tg-auth", h.botAuthAction)
 }
 
 func (h *Auth) registerAction(c *gin.Context) {
@@ -106,4 +107,30 @@ func (h *Auth) logoutAction(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *Auth) botAuthAction(c *gin.Context) {
+	const op = "handlers.Auth.botAuthAction"
+	log := h.log.WithField("operation", op)
+	log.Info("bot auth")
+
+	form, verr := authform.NewBotAuthForm().ParseAndValidate(c)
+	if verr != nil {
+		response.HandleError(verr, c)
+		return
+	}
+
+	_, err := h.api.AuthService.BotAuth(c, &ssov1.BotAuthRequest{
+		Email:    form.(*authform.BotAuthForm).Email,
+		Password: form.(*authform.BotAuthForm).Password,
+		Username: form.(*authform.BotAuthForm).Username,
+		AppId:    h.appID,
+	})
+	if err != nil {
+		log.WithError(err).Error("failed to auth bot")
+		response.HandleError(response.ResolveError(err), c)
+		return
+	}
+
+	c.Status(http.StatusOK)
 }
