@@ -119,8 +119,8 @@ func (h *Task) createTaskAction(c *gin.Context) {
 	// Запускаем горутину для ожидания срабатывания таймера
 	go func() {
 		// Создаем таймер
-		//timer1 := time.NewTimer(time.Duration(clusterResp.AverageReaction+delay) * time.Second)
-		timer1 := time.NewTimer(time.Duration(60) * time.Second)
+		timer1 := time.NewTimer(time.Duration(clusterResp.AverageReaction) * time.Second)
+		//timer1 := time.NewTimer(time.Duration(60) * time.Second)
 		<-timer1.C
 		// Таймер истек, отправляем сигнал в канал
 		timerDone1 <- true
@@ -129,8 +129,8 @@ func (h *Task) createTaskAction(c *gin.Context) {
 	// Запускаем горутину для ожидания срабатывания таймера
 	go func() {
 		// Создаем таймер
-		//timer2 := time.NewTimer(time.Duration(clusterResp.AverageReaction) * time.Second)
-		timer2 := time.NewTimer(time.Duration(10) * time.Second)
+		timer2 := time.NewTimer(time.Duration(clusterResp.AverageReaction+delay) * time.Second)
+		//timer2 := time.NewTimer(time.Duration(10) * time.Second)
 		<-timer2.C
 		// Таймер истек, отправляем сигнал в канал
 		timerDone2 <- true
@@ -149,43 +149,6 @@ func (h *Task) createTaskAction(c *gin.Context) {
 		response.HandleError(response.ResolveError(err), c)
 		return
 	}
-
-	// Ожидаем срабатывания таймера или завершения работы контекста
-	select {
-	case <-timerDone1:
-		// Таймер истек, можно вызвать gRPC-сервер
-		_, err := h.api.TaskService.AppointUserToTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.AppointUserToTaskRequest{
-			TaskId: task.Id,
-		})
-		if err != nil {
-			log.WithError(err).Errorf("%s: failed to change task status", op)
-			response.HandleError(response.ResolveError(err), c)
-			return
-		}
-		log.Infof("%s: Task status changed successfully", op)
-	case <-ctx.Done():
-		// Контекст отменен, необходимо прекратить ожидание
-		return
-	}
-
-	// Ожидаем срабатывания таймера или завершения работы контекста
-	select {
-	case <-timerDone2:
-		// Таймер истек, можно вызвать gRPC-сервер
-		_, err := h.api.TaskService.FireTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.FireTaskRequest{
-			TaskId: task.Id,
-		})
-		if err != nil {
-			log.WithError(err).Errorf("%s: failed to change task status", op)
-			response.HandleError(response.ResolveError(err), c)
-			return
-		}
-		log.Infof("%s: Task status changed successfully", op)
-	case <-ctx.Done():
-		// Контекст отменен, необходимо прекратить ожидание
-		return
-	}
-
 	c.JSON(http.StatusCreated, models.Task{
 		ID:          task.Id,
 		Title:       task.Title,
@@ -207,6 +170,40 @@ func (h *Task) createTaskAction(c *gin.Context) {
 			Frequency: task.Cluster.Frequency,
 		},
 	})
+	// Ожидаем срабатывания таймера или завершения работы контекста
+	select {
+	case <-timerDone1:
+		// Таймер истек, можно вызвать gRPC-сервер
+		_, err := h.api.TaskService.FireTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.FireTaskRequest{
+			TaskId: task.Id,
+		})
+		if err != nil {
+			log.WithError(err).Errorf("%s: failed to change task status", op)
+			response.HandleError(response.ResolveError(err), c)
+			return
+		}
+		log.Infof("%s: Task status changed successfully", op)
+	case <-ctx.Done():
+		// Контекст отменен, необходимо прекратить ожидание
+		return
+	}
+	// Ожидаем срабатывания таймера или завершения работы контекста
+	select {
+	case <-timerDone2:
+		// Таймер истек, можно вызвать gRPC-сервер
+		_, err := h.api.TaskService.AppointUserToTask(metadata.AppendToOutgoingContext(ctx, "access_token", accessToken), &tasksv1.AppointUserToTaskRequest{
+			TaskId: task.Id,
+		})
+		if err != nil {
+			log.WithError(err).Errorf("%s: failed to change task status", op)
+			response.HandleError(response.ResolveError(err), c)
+			return
+		}
+		log.Infof("%s: Task status changed successfully", op)
+	case <-ctx.Done():
+		// Контекст отменен, необходимо прекратить ожидание
+		return
+	}
 }
 
 func (h *Task) changeTaskStatusAction(c *gin.Context) {
