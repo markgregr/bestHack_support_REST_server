@@ -298,6 +298,7 @@ func (h *Task) listTasksAction(c *gin.Context) {
 			ID:          task.Id,
 			Title:       task.Title,
 			Description: task.Description,
+			Fire:        task.Fire,
 			Solution:    task.Solution,
 			Status:      models.TaskStatus(task.Status),
 			CreatedAt:   task.CreatedAt,
