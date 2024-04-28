@@ -35,7 +35,7 @@ func (h *Auth) EnrichRoutes(router *gin.Engine) {
 	authRoutes.POST("/register", h.registerAction)
 	authRoutes.POST("/login", h.loginAction)
 	authRoutes.POST("/logout", h.logoutAction)
-	authRoutes.POST("/tg-auth", h.botAuthAction)
+	authRoutes.POST("/bot", h.botAuthAction)
 }
 
 func (h *Auth) registerAction(c *gin.Context) {
